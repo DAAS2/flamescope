@@ -4,7 +4,7 @@
 
 FlameScope is an interactive, AI-powered web dashboard. It **summarizes, ranks and interprets** NASA Physical Sciences Informatics (PSI) combustion investigations to deliver fire safety insights for human exploration: spacecraft, the ISS, the Artemis Moon Base, pressurized rovers and Mars habitats.
 
-**Live demo:** _add your Vercel URL here_ · **Built for:** researchers and engineers designing fire safety for crewed habitats
+**Live demo:** https://flamescope-nasa.vercel.app · **Built for:** researchers and engineers designing fire safety for crewed habitats
 
 ### In 30 seconds
 1. Pick a destination (ISS, Moon Base, rover, Mars, spacesuit) in the 3D hero. The whole app switches to that atmosphere.
