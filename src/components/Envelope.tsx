@@ -144,8 +144,7 @@ export default function Envelope({ investigations, cond, onOpen, setCond }: { in
                 key={i.id}
                 data-box="1"
                 initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
+                animate={{ opacity: 1 }}
                 transition={{ delay: k * 0.03 }}
                 x={x0}
                 y={y0}

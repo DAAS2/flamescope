@@ -256,3 +256,23 @@ html.lenis body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Mission Control step transition: CSS-only so a step always ends fully visible. */
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(var(--step-dx, 40px));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.step-in {
+  animation: step-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .step-in {
+    animation: none;
+  }
+}

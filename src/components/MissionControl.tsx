@@ -104,15 +104,8 @@ export default function MissionControl(p: Props) {
           </div>
 
           <div className="relative overflow-hidden">
-            <AnimatePresence mode="wait" custom={dir}>
-              <motion.div
-                key={step}
-                custom={dir}
-                initial={{ opacity: 0, x: dir * 40 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: dir * -40 }}
-                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-              >
+            {/* Keyed remount with an enter-only animation: no exit to wait on, so a step can never be left blank. */}
+            <div key={step} className="step-in" style={{ "--step-dx": `${dir * 40}px` } as React.CSSProperties}>
                 {step === 0 && <StepDestination {...p} />}
                 {step === 1 && (
                   <div>
@@ -124,8 +117,7 @@ export default function MissionControl(p: Props) {
                 )}
                 {step === 2 && <StepEvidence {...p} />}
                 {step === 3 && <StepCompare {...p} />}
-              </motion.div>
-            </AnimatePresence>
+            </div>
           </div>
 
           <div className="mt-8 flex items-center justify-between border-t border-line pt-5">
