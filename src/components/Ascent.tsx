@@ -95,7 +95,7 @@ export default function Ascent({ investigations, onOpen }: { investigations: Inv
 
       <div ref={ref} className="relative mx-auto max-w-[1240px] px-4 sm:px-6" style={{ height: "540vh" }}>
         {/* Descent track */}
-        <div className="absolute inset-y-0 left-4 right-4 sm:left-6 sm:right-6 md:left-[360px]">
+        <div className="absolute inset-y-0 left-4 right-4 sm:left-6 sm:right-6 lg:left-[360px]">
           {/* depth ruler */}
           {TICKS.map((t) => (
             <div key={t} className="pointer-events-none absolute inset-x-0 flex items-center gap-3" style={{ top: pct(t) }}>
@@ -210,7 +210,7 @@ export default function Ascent({ investigations, onOpen }: { investigations: Inv
                     style={{ background: col, opacity: on ? 1 : 0.25, boxShadow: on ? `0 0 16px ${col}` : "none", minHeight: 14 }}
                   />
                   <span
-                    className="absolute bottom-full mb-1.5 hidden text-[0.68rem] font-semibold transition-colors md:block"
+                    className="absolute bottom-full mb-1.5 hidden text-[0.68rem] font-semibold transition-colors sm:block"
                     style={{ writingMode: "vertical-rl", transform: "rotate(180deg)", color: on ? "#fff" : "rgba(255,255,255,0.4)" }}
                   >
                     {r.acronym}
@@ -230,31 +230,29 @@ export default function Ascent({ investigations, onOpen }: { investigations: Inv
         </div>
 
         {/* Sticky gauge */}
-        <div className="sticky top-16 z-20 w-full pt-2 md:top-20 md:w-[330px]">
-          <div className="rounded-[26px] bg-[#0b1020]/85 p-4 ring-1 ring-white/10 backdrop-blur-xl md:p-5" style={{ boxShadow: `0 0 70px -24px ${o2Color}` }}>
+        <div className="sticky top-16 z-20 w-full pt-2 lg:top-20 lg:w-[330px]">
+          <div className="rounded-[26px] bg-[#0b1020]/85 p-4 ring-1 ring-white/10 backdrop-blur-xl lg:p-5" style={{ boxShadow: `0 0 70px -24px ${o2Color}` }}>
             <div className="flex items-end justify-between gap-3">
               <div>
                 <div className="text-[0.8rem] text-snow-3">Cabin oxygen</div>
                 <div className="display tnum flex items-baseline font-semibold leading-none">
-                  <span className="text-[2.8rem] md:text-[4.6rem]" style={{ color: o2Color }}>
+                  <span className="text-[2.8rem] lg:text-[4.6rem]" style={{ color: o2Color }}>
                     {o2 % 1 ? o2.toFixed(1) : o2}
                   </span>
                   <span className="ml-1 text-2xl text-snow-3">%</span>
                 </div>
               </div>
-              <div className="text-right md:hidden">
+              <div className="text-right lg:hidden">
                 <div className={`display tnum text-2xl font-semibold ${gap ? "text-flame" : "text-go"}`}>{active.length}</div>
                 <div className="text-[0.7rem] text-snow-3">tests here · {fi.toFixed(1)}× flamm.</div>
               </div>
             </div>
 
-            <AnimatePresence mode="wait">
-              <motion.div key={zone.t} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.25 }} className="mt-1">
-                <div className="display text-lg font-semibold md:text-xl">{zone.t}</div>
-              </motion.div>
-            </AnimatePresence>
+            <motion.div key={zone.t} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="mt-1">
+              <div className="display text-lg font-semibold lg:text-xl">{zone.t}</div>
+            </motion.div>
 
-            <div className="hidden md:block">
+            <div className="hidden lg:block">
               <div className="-my-2 flex justify-center">
                 <FlameViz gravity={0} o2={o2} size={140} />
               </div>
@@ -293,7 +291,7 @@ export default function Ascent({ investigations, onOpen }: { investigations: Inv
           </div>
 
           {/* fuel legend */}
-          <div className="mt-3 hidden flex-wrap gap-x-4 gap-y-1.5 px-1 text-[0.75rem] text-snow-3 md:flex">
+          <div className="mt-3 hidden flex-wrap gap-x-4 gap-y-1.5 px-1 text-[0.75rem] text-snow-3 lg:flex">
             {FUEL_ORDER.map((k) => (
               <span key={k} className="inline-flex items-center gap-1.5">
                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: FUEL_META[k].color }} />

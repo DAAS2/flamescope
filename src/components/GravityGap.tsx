@@ -1,7 +1,7 @@
 "use client";
 
 import { Html, OrbitControls, Stars } from "@react-three/drei";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { AnimatePresence, motion } from "framer-motion";
 import { AlertTriangle, ArrowUpRight, Check, Rotate3d } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -213,6 +213,9 @@ function Body({ b, active, onPick }: { b: (typeof BODIES)[number]; active: boole
 }
 
 function Scene({ g, setG, sel }: { g: number; setG: (g: number) => void; sel: BodyId | null }) {
+  // Pull the worlds inward on narrow (tablet/phone) canvases so none fall off the edge.
+  const { size } = useThree();
+  const k = Math.max(0.5, Math.min(1, size.width / size.height / 1.75));
   return (
     <>
       <color attach="background" args={["#070a14"]} />
@@ -221,7 +224,7 @@ function Scene({ g, setG, sel }: { g: number; setG: (g: number) => void; sel: Bo
       <Stars radius={60} depth={30} count={2500} factor={3} fade speed={0.4} />
       <group position={[0, 1.3, 0]}>
         {BODIES.map((b) => (
-          <Body key={b.id} b={b} active={sel === b.id} onPick={() => setG(b.g)} />
+          <Body key={b.id} b={{ ...b, pos: [b.pos[0] * k, b.pos[1], b.pos[2]] }} active={sel === b.id} onPick={() => setG(b.g)} />
         ))}
         <Flame g={g} />
       </group>
@@ -265,7 +268,7 @@ export default function GravityGap({ investigations, onOpen }: { investigations:
       intro="Gravity decides what a flame looks like and how fast it spreads. NASA has flame data for microgravity and for Earth, but nothing in between. Drag the slider or click a world to change gravity."
     >
       <div ref={wrap} className="panel-dark relative overflow-hidden">
-        <div className="relative h-[560px] sm:h-[640px]">
+        <div className="relative h-[400px] sm:h-[480px] md:h-[640px]">
           <Canvas camera={{ position: [0, 0.4, 10.5], fov: 50 }} dpr={[1, 1.75]} frameloop={visible ? "always" : "never"} gl={{ antialias: true }}>
             <Scene g={g} setG={setG} sel={sel} />
           </Canvas>
@@ -275,7 +278,7 @@ export default function GravityGap({ investigations, onOpen }: { investigations:
         </div>
 
         {/* control overlay */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 p-3 sm:p-5">
+        <div className="relative p-3 sm:p-5 md:pointer-events-none md:absolute md:inset-x-0 md:bottom-0">
           <div className="pointer-events-auto frost mx-auto grid max-w-[980px] gap-5 rounded-[26px] p-5 text-snow md:grid-cols-[1fr_1.3fr] md:p-6">
             <div className="min-w-0">
               <div className="flex items-baseline gap-3">
