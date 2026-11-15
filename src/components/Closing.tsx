@@ -1,100 +1,49 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { ArrowUpRight, Droplets, Radar, Shirt, Wind, type LucideIcon } from "lucide-react";
 import { WEIGHTS } from "@/lib/scoring";
-import { Reveal, Section } from "./ui";
+import { Section } from "./ui";
 
-export function GravityGap({ onOpen }: { onOpen: (id: string) => void }) {
-  const stops = [
-    { g: 0, l: "Microgravity", s: "ISS · 20 PSI investigations", c: "#5cc8ff", data: true },
-    { g: 0.166, l: "Moon", s: "No PSI data yet · LUCI, FM2 planned", c: "#e8eefc", data: false },
-    { g: 0.38, l: "Mars", s: "No combustion data", c: "#ff5f3a", data: false },
-    { g: 1, l: "Earth", s: "Decades of 1-g testing (NASA-STD-6001)", c: "#ffa94d", data: true },
-  ];
-  return (
-    <Section
-      id="gravity"
-      eyebrow="06 · The Gravity Gap"
-      title={
-        <>
-          The Moon sits in a <span className="italic text-gradient-warm">data blind spot.</span>
-        </>
-      }
-      intro="PSI holds no partial-gravity combustion data yet. Until LUCI and FM2 fly, lunar and Martian fire behaviour has to be bounded between microgravity and Earth results."
-    >
-      <div className="glass hud rounded-xl p-6 sm:p-10">
-        <div className="relative mx-2 h-2 rounded-full bg-gradient-to-r from-blue via-white/20 to-amber">
-          <motion.div
-            className="absolute -top-1 h-4 rounded-full bg-[repeating-linear-gradient(45deg,rgba(255,95,58,0.6)_0_6px,transparent_6px_12px)]"
-            style={{ left: "10%", width: "35%" }}
-            initial={{ scaleX: 0 }}
-            whileInView={{ scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1 }}
-          />
-          {stops.map((s) => (
-            <div key={s.l} className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: `${s.g * 100}%` }}>
-              <div className="h-5 w-5 rounded-full border-2 bg-bg" style={{ borderColor: s.c, boxShadow: `0 0 18px ${s.c}` }} />
-            </div>
-          ))}
-        </div>
-        <div className="mt-8 grid gap-4 sm:grid-cols-4">
-          {stops.map((s, i) => (
-            <Reveal key={s.l} delay={i * 0.08}>
-              <div className={`rounded-2xl border p-4 ${s.data ? "border-line" : "border-ember/30 bg-ember/[0.05]"}`}>
-                <div className="font-mono text-xs text-ink-3">{s.g} g</div>
-                <div className="mt-1 text-lg font-semibold" style={{ color: s.c }}>
-                  {s.l}
-                </div>
-                <div className="mt-1 text-xs text-ink-3">{s.s}</div>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-        <div className="mt-6 rounded-2xl border border-blue/25 bg-blue/[0.05] p-5 text-sm leading-relaxed text-ink-2">
-          <strong className="text-blue">Proxy available:</strong> the{" "}
-          <button onClick={() => onOpen("e-field")} className="text-ink underline decoration-blue underline-offset-4">
-            E-FIELD Flames
-          </button>{" "}
-          experiment used electric fields acting on flame ions to create buoyancy-like flow, so it mimics partial gravity. It is the closest analogue to lunar conditions in PSI today.
-        </div>
-      </div>
-    </Section>
-  );
-}
-
-const SPINOFFS = [
-  { i: "💧", t: "Fine-water-mist extinguishers", d: "Developed for the ISS, now used in buildings and ships. It uses far less water and does less damage than sprinklers.", link: "flex-2" },
-  { i: "📡", t: "Smart smoke detectors", d: "A 1970s shuttle detector that tells smoke from dust cuts nuisance alarms in mines and industry.", link: "same" },
-  { i: "🫁", t: "Firefighter air tanks", d: "Spacesuit life-support tech made breathing apparatus lighter and longer-lasting.", link: null },
-  { i: "🧥", t: "Fire-resistant attire", d: "Spacesuit materials improved the heat protection and mobility of firefighter turnout gear.", link: null },
+const SPINOFFS: { icon: LucideIcon; t: string; d: string; link: string | null; tone: string }[] = [
+  { icon: Droplets, t: "Water-mist extinguishers", d: "Developed for the ISS and now used in buildings and ships. They use far less water and cause less damage than sprinklers.", link: "flex-2", tone: "#1f5cff" },
+  { icon: Radar, t: "Smarter smoke detectors", d: "Research on telling smoke from dust cuts false alarms in mines, factories and homes.", link: "same", tone: "#7c5cff" },
+  { icon: Wind, t: "Firefighter air tanks", d: "Spacesuit life-support technology made breathing apparatus lighter and longer-lasting.", link: null, tone: "#12b886" },
+  { icon: Shirt, t: "Fire-resistant gear", d: "Spacesuit materials improved the heat protection and mobility of firefighter turnout gear.", link: null, tone: "#ff6a2b" },
 ];
 
 export function Spinoffs({ onOpen }: { onOpen: (id: string) => void }) {
   return (
     <Section
       id="earth"
-      eyebrow="07 · Back on Earth"
+      eyebrow="Back on Earth"
       title={
         <>
-          Space fire research <span className="italic text-ink-2">protects people at home.</span>
+          Space fire research <span className="text-go">protects people at home.</span>
         </>
       }
     >
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-px overflow-hidden rounded-[32px] bg-line ring-1 ring-line sm:grid-cols-2 lg:grid-cols-4">
         {SPINOFFS.map((s, k) => (
-          <Reveal key={s.t} delay={k * 0.07}>
-            <div className="glass hud h-full rounded-xl p-6 transition hover:border-green/40">
-              <div className="text-3xl">{s.i}</div>
-              <div className="mt-4 font-semibold text-ink">{s.t}</div>
-              <p className="mt-2 text-sm leading-relaxed text-ink-3">{s.d}</p>
-              {s.link && (
-                <button onClick={() => onOpen(s.link!)} className="mt-4 text-xs text-green hover:underline">
-                  Related PSI data →
-                </button>
-              )}
-            </div>
-          </Reveal>
+          <motion.div
+            key={s.t}
+            initial={{ opacity: 0, y: 16 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: k * 0.08, duration: 0.6 }}
+            className="group flex flex-col bg-white p-7 transition-colors hover:bg-paper"
+          >
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl transition-transform duration-500 group-hover:-rotate-6 group-hover:scale-110" style={{ background: `${s.tone}14`, color: s.tone }}>
+              <s.icon size={22} />
+            </span>
+            <div className="display mt-10 text-[1.3rem] font-semibold leading-tight">{s.t}</div>
+            <p className="mt-2 text-[0.92rem] leading-relaxed text-ink-2">{s.d}</p>
+            {s.link && (
+              <button onClick={() => onOpen(s.link!)} className="mt-auto inline-flex items-center gap-1 pt-6 text-[0.85rem] font-semibold" style={{ color: s.tone }}>
+                See the PSI experiment <ArrowUpRight size={14} />
+              </button>
+            )}
+          </motion.div>
         ))}
       </div>
     </Section>
@@ -102,44 +51,63 @@ export function Spinoffs({ onOpen }: { onOpen: (id: string) => void }) {
 }
 
 export function Methodology({ source }: { source: "supabase" | "local" }) {
+  const terms = [
+    ["Oxygen fit", WEIGHTS.o2],
+    ["Pressure fit", WEIGHTS.pressure],
+    ["Airflow fit", WEIGHTS.flow],
+    ["Fuel relevance", WEIGHTS.fuel],
+    ["Directness", WEIGHTS.directness],
+  ] as const;
   return (
-    <Section id="method" eyebrow="08 · Methodology & Sources" title="Transparent by design.">
-      <div className="grid gap-5 lg:grid-cols-3">
-        <div className="glass hud rounded-xl p-6">
-          <h3 className="font-semibold">Relevance score</h3>
-          <div className="mt-3 rounded-xl bg-bg/60 p-3 font-mono text-[0.72rem] leading-relaxed text-ink-2">
-            score = {WEIGHTS.o2}·O₂fit + {WEIGHTS.pressure}·Pfit + {WEIGHTS.flow}·flowfit + {WEIGHTS.fuel}·fuel + {WEIGHTS.directness}·directness
+    <Section id="method" eyebrow="Methodology and sources" title={<>Transparent <span className="text-blue">by design.</span></>}>
+      <div className="grid gap-10 lg:grid-cols-3 lg:gap-12">
+        <div>
+          <h3 className="text-[1.3rem] font-semibold">How relevance is scored</h3>
+          <div className="mt-5 space-y-2.5">
+            {terms.map(([l, w]) => (
+              <div key={l} className="flex items-center gap-3 text-[0.9rem]">
+                <span className="w-32 text-ink-2">{l}</span>
+                <span className="h-2 flex-1 overflow-hidden rounded-full bg-line">
+                  <motion.span initial={{ width: 0 }} whileInView={{ width: `${w * 100 * 3.33}%` }} viewport={{ once: true }} transition={{ duration: 0.9 }} className="block h-full rounded-full bg-blue" />
+                </span>
+                <span className="tnum w-10 text-right font-semibold">{Math.round(w * 100)}%</span>
+              </div>
+            ))}
           </div>
-          <p className="mt-3 text-sm leading-relaxed text-ink-3">
-            The fit terms are 1 inside the tested range and decay exponentially outside it (O₂ scale 8%, pressure 25 kPa, flow 15 cm/s). Fuel relevance: solid 1.0, aerosol 0.85, liquid 0.7, gas 0.6. Directness is a 0–1 expert rating of how directly an investigation informs crew-habitat fire safety, taken from the challenge brief. A focus filter scales non-matching pillars by 0.6.
+          <p className="mt-5 text-[0.9rem] leading-relaxed text-ink-2">
+            A fit is 1 inside the tested range and decays exponentially outside it (oxygen scale 8%, pressure 25 kPa, airflow 15 cm/s). Solids score highest for fuel relevance because they are what burns in a cabin. Directness rates how directly an experiment informs crew fire safety.
           </p>
         </div>
-        <div className="glass hud rounded-xl p-6">
-          <h3 className="font-semibold">AI layer</h3>
-          <p className="mt-3 text-sm leading-relaxed text-ink-3">
-            Google Gemini receives the complete structured dataset, the current ranking and the auto-generated insights in every request. It is instructed to cite investigations as [ACRONYM], to refuse to invent numbers, and to name the missing experiment when the data can&apos;t answer. Citations become clickable chips. Questions are logged anonymously to Supabase to show what researchers want to know.
+        <div>
+          <h3 className="text-[1.3rem] font-semibold">The AI layer</h3>
+          <p className="mt-5 text-[0.9rem] leading-relaxed text-ink-2">
+            Every request to Google Gemini includes the full structured dataset, the current ranking and the generated insights. The model must cite experiments, must not invent numbers, and must name the missing experiment when the data cannot answer. Citations become clickable links. Questions are logged anonymously to Supabase.
           </p>
-          <p className="mt-3 text-sm leading-relaxed text-ink-3">The flammability index (O₂/21)^1.6·(P/101.3)^0.2 is an illustrative heuristic, not a certified model.</p>
+          <p className="mt-3 text-[0.9rem] leading-relaxed text-ink-2">The flammability index (O₂/21)^1.6 × (P/101.3)^0.2 is an illustrative heuristic, not a certified model.</p>
         </div>
-        <div className="glass hud rounded-xl p-6">
-          <h3 className="font-semibold">Sources</h3>
-          <ul className="mt-3 space-y-2 text-sm text-ink-3">
-            <li>
-              <a className="text-blue hover:underline" href="https://psi.nasa.gov/physci/repo/search?q=combustion&data_source=psi&data_type=investigation" target="_blank" rel="noreferrer">
-                NASA Physical Sciences Informatics (PSI), Combustion
-              </a>
-            </li>
-            <li>
-              <a className="text-blue hover:underline" href="https://www.nasa.gov/glenn/research/combustion-and-reacting-systems/" target="_blank" rel="noreferrer">
-                NASA Combustion Science (Glenn Research Center)
-              </a>
-            </li>
-            <li>A Researcher&apos;s Guide to ISS Combustion Science (NASA, 2015)</li>
-            <li>NASA Space Apps 2026 &ldquo;Flame in Freefall&rdquo; challenge brief</li>
-            <li>NASA Spinoff: fire detector, fireman&apos;s air tanks, fire attire</li>
+        <div>
+          <h3 className="text-[1.3rem] font-semibold">Sources</h3>
+          <ul className="mt-5 divide-y divide-line text-[0.9rem]">
+            {[
+              ["NASA Physical Sciences Informatics, combustion", "https://psi.nasa.gov/physci/repo/search?q=combustion&data_source=psi&data_type=investigation"],
+              ["NASA Glenn combustion research", "https://www.nasa.gov/glenn/research/combustion-and-reacting-systems/"],
+              ["A Researcher's Guide to ISS Combustion Science (2015)", null],
+              ["Space Apps 2026: Flame in Freefall brief", null],
+              ["NASA Spinoff: detectors, air tanks, fire gear", null],
+            ].map(([t, h]) => (
+              <li key={t} className="py-2.5">
+                {h ? (
+                  <a href={h} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-blue hover:underline">
+                    {t} <ArrowUpRight size={13} />
+                  </a>
+                ) : (
+                  <span className="text-ink-2">{t}</span>
+                )}
+              </li>
+            ))}
           </ul>
-          <p className="mt-4 rounded-xl border border-line bg-bg/40 p-3 text-xs text-ink-3">
-            Data served from <span className="font-mono text-ink">{source === "supabase" ? "Supabase (live)" : "bundled dataset"}</span>. Condition ranges are envelopes summarised from public descriptions and flagged &ldquo;approximate&rdquo; where not taken from exact test matrices.
+          <p className="mt-4 rounded-2xl bg-white p-4 text-[0.82rem] text-ink-3 ring-1 ring-line">
+            Served from <b className="text-ink">{source === "supabase" ? "Supabase (live)" : "the bundled dataset"}</b>. Condition ranges are summarized from public descriptions and marked approximate where they are not taken from exact test matrices.
           </p>
         </div>
       </div>

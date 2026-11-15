@@ -86,7 +86,7 @@ export function AIText({
                 <button
                   type="button"
                   onClick={() => onCite?.(id)}
-                  className="mx-0.5 inline-flex items-center rounded-md border border-blue/30 bg-blue/10 px-1.5 py-px font-mono text-[0.72rem] text-blue transition hover:bg-blue/20"
+                  className="mx-0.5 inline-flex items-center rounded-full bg-blue-soft px-2 py-px text-[0.78rem] font-semibold text-blue transition hover:bg-blue hover:text-white"
                 >
                   {children}
                 </button>

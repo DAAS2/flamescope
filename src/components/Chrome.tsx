@@ -23,18 +23,14 @@ export function Preloader() {
   return (
     <AnimatePresence>
       {!done && (
-        <motion.div exit={{ clipPath: "inset(0 0 100% 0)" }} transition={{ duration: 0.9, ease: [0.76, 0, 0.24, 1] }} className="fixed inset-0 z-[100] flex flex-col justify-between bg-black p-6 sm:p-10">
-          <div className="flex justify-between font-mono text-[10px] uppercase tracking-[0.3em] text-white/50">
-            <span>FlameScope</span>
-            <span>Ignition sequence</span>
-          </div>
-          <div className="mx-auto w-48">
-            <div className="h-px w-full bg-white/15">
-              <div className="h-px bg-white" style={{ width: `${n}%` }} />
+        <motion.div exit={{ opacity: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }} className="fixed inset-0 z-[100] flex items-center justify-center bg-night text-snow">
+          <div className="w-56 text-center">
+            <div className="display tnum text-5xl font-semibold">{n}<span className="text-snow-3">%</span></div>
+            <div className="mt-4 h-1 overflow-hidden rounded-full bg-white/10">
+              <div className="h-full rounded-full bg-flame" style={{ width: `${n}%` }} />
             </div>
-            <div className="mt-3 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-white/50">Loading PSI combustion data</div>
+            <div className="mt-3 text-[0.85rem] text-snow-3">Loading NASA combustion data</div>
           </div>
-          <div className="font-display text-[22vw] font-bold leading-none tracking-tighter text-white sm:text-[14vw]">{String(n).padStart(3, "0")}</div>
         </motion.div>
       )}
     </AnimatePresence>

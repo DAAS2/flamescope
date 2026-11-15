@@ -1,23 +1,22 @@
 import type { Metadata, Viewport } from "next";
-import { Exo_2, Inter, JetBrains_Mono } from "next/font/google";
+import { Funnel_Display, Public_Sans } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
-const jb = JetBrains_Mono({ variable: "--font-jb", subsets: ["latin"] });
-const exo = Exo_2({ variable: "--font-exo", subsets: ["latin"], weight: ["300", "400", "600", "700"], style: ["normal", "italic"] });
+const publicSans = Public_Sans({ variable: "--font-public", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+const funnel = Funnel_Display({ variable: "--font-funnel", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
 
 export const metadata: Metadata = {
-  title: "FlameScope: Fire Safety Insights from Microgravity Combustion",
+  title: "FlameScope: Fire Safety Intelligence from Microgravity Combustion",
   description:
-    "An AI-powered dashboard that summarizes, ranks and interprets NASA PSI microgravity combustion investigations to deliver fire safety insights for the Moon, Mars and beyond.",
+    "FlameScope summarizes, ranks and interprets NASA PSI microgravity combustion investigations, with live simulations and AI analysis, to deliver fire safety insights for the Moon, Mars and beyond.",
 };
 
-export const viewport: Viewport = { themeColor: "#000000" };
+export const viewport: Viewport = { themeColor: "#070a14" };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${jb.variable} ${exo.variable} antialiased`}>{children}</body>
+      <body className={`${publicSans.variable} ${funnel.variable} antialiased`}>{children}</body>
     </html>
   );
 }

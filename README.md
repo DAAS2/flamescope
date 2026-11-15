@@ -1,4 +1,4 @@
-# 🔥 FlameScope: AI-powered fire safety insights from microgravity combustion
+# FlameScope: AI-powered fire safety insights from microgravity combustion
 
 **NASA Space Apps Challenge 2026 · "Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data"**
 
@@ -10,21 +10,23 @@ Fires in space have killed crews (Apollo 1), threatened missions (Apollo 13, Mir
 ## What FlameScope does
 | Challenge objective | FlameScope feature |
 |---|---|
-| Identify investigations most relevant to crew habitats | **Mission Console**: pick ISS, Moon Base, Rover, Mars, Spacesuit or a custom atmosphere (O₂, pressure, airflow, gravity). All 20 investigations re-rank live with a transparent relevance score and a per-factor breakdown bar. |
+| Identify investigations most relevant to crew habitats | **Mission Control**: pick ISS, Moon Base, Rover, Mars, Spacesuit or a custom atmosphere (O₂, pressure, airflow, gravity). All 20 investigations re-rank live with a transparent relevance score and a per-factor breakdown bar. |
 | Extract data for predictive modelling of flammability | **Flammability Envelope**: an O₂ × pressure map of every investigation's tested range, with habitat atmospheres and the *Exploration Atmosphere Zone* overlaid. It shows exactly where data exists, and that **no solid-material µg data covers Moon/rover atmospheres**. |
 | Highlight research for next-gen fire safety controls | Every investigation is tagged **Prevention / Detection / Suppression**, with auto-generated, data-driven insights (coverage, data gaps, ventilation, partial-g warnings). |
-| Summarize objectives, fuels, geometry, conditions, variables, sensors | **Investigation Explorer** with full-text search and filters, plus a detail drawer showing objective, fuels, sample geometry, O₂, pressure, flow, diluents, sensors, what varied between tests, findings and an Earth application. |
+| Summarize objectives, fuels, geometry, conditions, variables, sensors | The **Simulator** experiment picker plus an investigation **dossier** showing objective, fuels, sample geometry, O₂, pressure, flow, diluents, sensors, what varied between tests, findings and an Earth application. |
 | Similarities & differences between investigations | **Compare**: up to 3 side by side, a radar chart, a table that flags fields that are "same" (e.g. shared MSG flow duct or CIR hardware), and an AI comparison. |
 | "SI-powered" | **Google Gemini** (`gemini-3.6-flash`) powers a Mission Fire-Safety Briefing, per-investigation interpretation, AI comparison and an **Ask FlameScope** chat. Every answer is grounded in the dataset and cites investigations as clickable chips. |
 | Partial gravity (Moon/Mars) | **Gravity Gap** panel: µg ↔ Moon ↔ Mars ↔ Earth, flagging that PSI has no partial-g data, with E-FIELD Flames as the only proxy and LUCI/FM2 as future data. |
 | Applications on Earth | **Back on Earth**: water mist, smoke/dust detectors, firefighter air tanks and attire, each linked to the related PSI data. |
 
 ### Experience highlights
-- **3D Mission Space (hero):** a real-time three.js scene with procedural Earth (clouds, atmosphere, city lights), Moon, Mars, Sun, a modelled **ISS**, a **lunar base with pressurized rover** and a **Mars habitat**. Click any destination and the camera flies there and sets the mission atmosphere for the whole app, with live flame telemetry alongside.
-- **The Oxygen Ascent:** a scroll journey from 12% to 100% O₂. A sticky gauge shows the flame growing and a live flammability index; each investigation's tested O₂ range is a glowing rail that lights up as you pass through it, revealing the data gaps where crews will live.
-- **Experiment Simulator:** each of the 20 PSI investigations re-runs as a live simulation (flame spread over solids, droplet d²-law burning and cool flames, spherical burners, co-flow jets with the E-FIELD partial-gravity proxy, smoke transport to detectors). Sliders mark the *tested range*, and the app flags when you are extrapolating.
-- **Mission Control:** tabbed workspace with the relevance ranking, a **draggable** O₂ × pressure envelope, a radar compare view and the AI analyst.
-- A Lusion-style preloader, custom cursor and Lenis smooth scrolling, in a NASA Eyes-inspired HUD design system (Exo 2 / Inter / JetBrains Mono).
+- **3D Mission Space (hero):** a real-time three.js scene with procedural Earth (clouds, atmosphere, city lights), Moon, Mars, Sun, a modelled **ISS**, a **lunar base with pressurized rover** and a **Mars habitat**. Click any destination and the camera flies there and sets the mission atmosphere for the whole app. A live flame model opens on demand.
+- **The Oxygen Ascent:** a pinned, scroll-driven coverage chart from 12% to 100% O₂. Each row is the O₂ range one investigation tested. A marker sweeps across as you scroll, rows light up when they cover your oxygen level, and habitat atmospheres are pinned on the axis, so the data gaps where crews will live are obvious.
+- **Experiment Simulator:** each of the 20 PSI investigations re-runs as a live simulation (flame spread over solids, droplet d²-law burning and cool flames, spherical burners, co-flow jets with the E-FIELD partial-gravity proxy, smoke transport to detectors). Each slider shows the range NASA actually tested, and the app flags when you are extrapolating.
+- **Mission Control:** a guided four-step flow: choose a destination, check the **draggable** O₂ × pressure data map, rank the evidence and generate an AI briefing, then compare investigations (radar plus table) or ask the AI analyst.
+- **Gravity Gap (3D):** an interactive WebGL scene with the ISS, Moon, Mars and Earth and a shader-driven flame that morphs from a blue microgravity sphere to a yellow 1 g teardrop. It shows where combustion data exists and where it does not.
+- **Investigation dossier:** a modal with a live replay of the experiment, tested ranges plotted against your mission, a score breakdown, findings and an AI interpretation.
+- Clean light design system (Funnel Display and Public Sans, sentence-case type, pill controls, custom components) with Lenis smooth scrolling.
 
 ## Investigations covered (20)
 ACME (BRE, CFI-G, E-FIELD Flames, CLD Flame, Flame Design, s-Flame) · MDCA droplets (FLEX, FLEX-2, CFI) · MSG / SPICE flow duct (BASS, BASS-II, SPICE, SLICE) · Saffire-I, II, III · SAME, SAME-R, DAFT, DAFT-2.

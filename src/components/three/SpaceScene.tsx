@@ -60,7 +60,7 @@ const FRAG: Record<Kind, string> = {
     base = col;`,
 };
 
-function planetMaterial(kind: Kind) {
+export function planetMaterial(kind: Kind) {
   return new THREE.ShaderMaterial({
     uniforms: { sunDirW: { value: SUN_POS.clone().normalize() }, time: { value: 0 } },
     vertexShader: VERT,
@@ -84,7 +84,7 @@ function planetMaterial(kind: Kind) {
   });
 }
 
-function atmosphere(color: string, power = 3.0, intensity = 1.2) {
+export function atmosphere(color: string, power = 3.0, intensity = 1.2) {
   return new THREE.ShaderMaterial({
     uniforms: { c: { value: new THREE.Color(color) }, p: { value: power }, k: { value: intensity } },
     vertexShader: `varying vec3 vN; varying vec3 vV; void main(){ vN=normalize(normalMatrix*normal); vec4 mv=modelViewMatrix*vec4(position,1.0); vV=normalize(-mv.xyz); gl_Position=projectionMatrix*mv; }`,
@@ -110,12 +110,12 @@ function Label({ text, sub, onClick, active }: { text: string; sub?: string; onC
     <Html center distanceFactor={undefined} zIndexRange={[10, 0]} style={{ pointerEvents: "auto" }}>
       <button
         onClick={onClick}
-        className={`group flex translate-x-[56%] -translate-y-6 items-center gap-2 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.2em] transition ${active ? "text-white" : "text-white/60 hover:text-white"}`}
+        className={`group flex translate-x-[56%] -translate-y-6 items-center gap-2 whitespace-nowrap text-[12px] font-semibold transition ${active ? "text-ink" : "text-white/80 hover:text-white"}`}
       >
-        <span className={`h-px w-6 ${active ? "bg-[#4fc3ff]" : "bg-white/40"}`} />
-        <span className={`rounded-sm border px-1.5 py-0.5 backdrop-blur ${active ? "border-[#4fc3ff] bg-[#4fc3ff]/15" : "border-white/20 bg-black/40"}`}>
+        <span className={`h-px w-5 ${active ? "bg-white" : "bg-white/40"}`} />
+        <span className={`rounded-full px-2.5 py-1 backdrop-blur-md ${active ? "bg-white" : "bg-[#0c101e]/60 ring-1 ring-white/15 group-hover:bg-[#0c101e]/80"}`}>
           {text}
-          {sub && <span className="ml-1.5 text-white/40">{sub}</span>}
+          {sub && <span className={`ml-1.5 font-normal ${active ? "text-ink-3" : "text-white/50"}`}>{sub}</span>}
         </span>
       </button>
     </Html>
@@ -149,7 +149,7 @@ function Sun() {
   );
 }
 
-function ISS({ groupRef }: { groupRef: React.RefObject<THREE.Group | null> }) {
+export function ISS({ groupRef }: { groupRef: React.RefObject<THREE.Group | null> }) {
   const gold = <meshStandardMaterial color="#b8924a" metalness={0.6} roughness={0.35} emissive="#2a1a05" />;
   const panel = <meshStandardMaterial color="#1b2b5a" metalness={0.4} roughness={0.3} emissive="#0a1230" />;
   const white = <meshStandardMaterial color="#d9dde4" metalness={0.3} roughness={0.5} />;
@@ -195,7 +195,7 @@ function ISS({ groupRef }: { groupRef: React.RefObject<THREE.Group | null> }) {
   );
 }
 
-function Rover() {
+export function Rover() {
   const body = <meshStandardMaterial color="#e6e8ec" metalness={0.4} roughness={0.4} />;
   const dark = <meshStandardMaterial color="#222831" roughness={0.8} />;
   return (
@@ -228,7 +228,7 @@ function Rover() {
   );
 }
 
-function Habitat({ color = "#e8ecf2" }: { color?: string }) {
+export function Habitat({ color = "#e8ecf2" }: { color?: string }) {
   return (
     <group scale={0.06}>
       {[

@@ -1,13 +1,14 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { AlertTriangle, ArrowUpRight, CircleDot, Cloud, Droplet, Flame, FlaskConical, RotateCcw, Sparkles, Wind, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { Investigation, SafetyCategory } from "@/data/investigations";
-import { rank, type Conditions } from "@/lib/scoring";
+import type { Investigation } from "@/data/investigations";
+import { type Conditions } from "@/lib/scoring";
 import { AIText, useAI } from "./ai";
-import { CAT_META, CatChip, FUEL_META, Section } from "./ui";
+import { Btn, CatChip, Section, Seg, Slider } from "./ui";
 
-type SimKind = "spread" | "droplet" | "sphere" | "jet" | "smoke";
+export type SimKind = "spread" | "droplet" | "sphere" | "jet" | "smoke";
 
 export function simKind(i: Investigation): SimKind {
   if (i.fuelType === "solid") return "spread";
@@ -17,7 +18,7 @@ export function simKind(i: Investigation): SimKind {
   return "jet";
 }
 
-const KIND_LABEL: Record<SimKind, string> = {
+export const KIND_LABEL: Record<SimKind, string> = {
   spread: "Flame spread over a solid sample",
   droplet: "Free-floating fuel droplet combustion",
   sphere: "Spherical porous-burner flame",
@@ -25,12 +26,12 @@ const KIND_LABEL: Record<SimKind, string> = {
   smoke: "Smoke / aerosol transport to detectors",
 };
 
-interface P extends Conditions {
+export interface P extends Conditions {
   efield: number;
 }
 
 /** Heuristic physics. Illustrative trends drawn from PSI findings, not validated models. */
-function model(kind: SimKind, p: P) {
+export function model(kind: SimKind, p: P) {
   const o2x = p.o2 / 21;
   const g = p.gravity + p.efield * 0.6; // E-FIELD ionic wind mimics buoyancy
   switch (kind) {
@@ -39,29 +40,29 @@ function model(kind: SimKind, p: P) {
       const flowFactor = p.flow < 1 ? 0.25 : Math.exp(-Math.pow((p.flow - 18) / 22, 2)) * 1.1 + 0.15; // BASS-II: optimum flow
       const alive = p.o2 > loi && (p.flow > 0.5 || g > 0.05 || p.o2 > 24);
       const rate = alive ? Math.max(0, (p.o2 - loi) / 6) * flowFactor * (1 + g * 1.5) * Math.pow(p.pressure / 101, 0.3) : 0;
-      return { alive, rate, readouts: [["Spread rate", `${(rate * 2.2).toFixed(2)} mm/s`], ["Est. limiting O₂", `${loi.toFixed(1)}%`], ["Status", alive ? "BURNING" : "EXTINGUISHED"]] };
+      return { alive, rate, readouts: [["Spread rate", `${(rate * 2.2).toFixed(2)} mm/s`], ["Est. limiting O₂", `${loi.toFixed(1)}%`], ["Status", alive ? "Burning" : "Extinguished"]] };
     }
     case "droplet": {
       const K = 0.35 * Math.log(1 + 2.2 * o2x) * (1 + g * 0.4); // mm²/s, d²-law burning constant
       const hotExt = p.o2 < 14 || p.pressure < 40;
-      return { alive: !hotExt, rate: K, readouts: [["Burning constant K", `${K.toFixed(2)} mm²/s`], ["Flame / droplet", `${(g > 0.1 ? 3 : 7).toFixed(0)}× d`], ["Regime", hotExt ? "COOL FLAME" : "HOT FLAME"]] };
+      return { alive: !hotExt, rate: K, readouts: [["Burning constant K", `${K.toFixed(2)} mm²/s`], ["Flame / droplet", `${(g > 0.1 ? 3 : 7).toFixed(0)}× d`], ["Regime", hotExt ? "Cool flame" : "Hot flame"]] };
     }
     case "sphere": {
       const r = 0.6 + 0.5 * o2x;
-      return { alive: p.o2 > 13, rate: r, readouts: [["Flame radius", `${(r * 18).toFixed(0)} mm`], ["Soot", p.o2 > 30 ? "LOW" : "MODERATE"], ["Shape", g > 0.1 ? "DISTORTED" : "SPHERICAL"]] };
+      return { alive: p.o2 > 13, rate: r, readouts: [["Flame radius", `${(r * 18).toFixed(0)} mm`], ["Soot", p.o2 > 30 ? "Low" : "Moderate"], ["Shape", g > 0.1 ? "Distorted" : "Spherical"]] };
     }
     case "jet": {
       const L = 40 * (1 / Math.sqrt(o2x)) * (1 + 0.4 * (1 - Math.min(1, g)));
-      return { alive: p.o2 > 13, rate: L, readouts: [["Flame length", `${L.toFixed(0)} mm`], ["Lift-off", p.flow > 35 ? "LIFTED" : "ATTACHED"], ["Buoyancy", g > 0.05 ? (p.efield ? "E-FIELD PROXY" : "PRESENT") : "NONE"]] };
+      return { alive: p.o2 > 13, rate: L, readouts: [["Flame length", `${L.toFixed(0)} mm`], ["Lift-off", p.flow > 35 ? "Lifted" : "Attached"], ["Buoyancy", g > 0.05 ? (p.efield ? "E-field proxy" : "Present") : "None"]] };
     }
     case "smoke": {
       const size = 0.4 + (g < 0.05 ? 0.6 : 0.2) + (p.flow < 3 ? 0.3 : 0); // µm, aging without settling
-      return { alive: true, rate: size, readouts: [["Mean particle size", `${size.toFixed(2)} µm`], ["Photoelectric", size > 0.8 ? "STRONG" : "WEAK"], ["Ionization", size > 0.8 ? "WEAK" : "STRONG"]] };
+      return { alive: true, rate: size, readouts: [["Mean particle size", `${size.toFixed(2)} µm`], ["Photoelectric", size > 0.8 ? "Strong" : "Weak"], ["Ionization", size > 0.8 ? "Weak" : "Strong"]] };
     }
   }
 }
 
-function SimCanvas({ kind, params, seed }: { kind: SimKind; params: P; seed: number }) {
+export function SimCanvas({ kind, params, seed }: { kind: SimKind; params: P; seed: number }) {
   const cv = useRef<HTMLCanvasElement>(null);
   const pr = useRef(params);
   pr.current = params;
@@ -110,21 +111,6 @@ function SimCanvas({ kind, params, seed }: { kind: SimKind; params: P; seed: num
       const m = model(kind, p);
       const g = p.gravity + p.efield * 0.6;
       ctx.clearRect(0, 0, W, H);
-      // grid
-      ctx.strokeStyle = "rgba(255,255,255,0.04)";
-      ctx.lineWidth = 1;
-      for (let x = 0; x < W; x += 32) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, H);
-        ctx.stroke();
-      }
-      for (let y = 0; y < H; y += 32) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(W, y);
-        ctx.stroke();
-      }
       ctx.globalCompositeOperation = "lighter";
       const hot = g > 0.15;
       const flameCol = hot ? "rgba(255,150,50,A)" : "rgba(80,170,255,A)";
@@ -158,9 +144,9 @@ function SimCanvas({ kind, params, seed }: { kind: SimKind; params: P; seed: num
         cg.addColorStop(0, "#2a2420"); cg.addColorStop(1, "#5a3a22");
         ctx.fillStyle = cg; // char
         ctx.fillRect(x0, sy - 4, Math.max(0, fx - x0), 8);
-        ctx.fillStyle = "rgba(255,255,255,0.4)"; ctx.font = "10px var(--font-jb)";
-        ctx.fillText("AIRFLOW →", x0, sy + 30);
-        ctx.fillText(`BURNT ${Math.round(front * 100)}%`, x1 - 70, sy + 30);
+        ctx.fillStyle = "rgba(255,255,255,0.4)"; ctx.font = "500 12px var(--font-public), sans-serif";
+        ctx.fillText("Airflow →", x0, sy + 30);
+        ctx.fillText(`${Math.round(front * 100)}% burned`, x1 - 70, sy + 30);
         ctx.globalCompositeOperation = "lighter";
         if (m.alive && front < 1) {
           const len = 30 + m.rate * 30;
@@ -173,8 +159,8 @@ function SimCanvas({ kind, params, seed }: { kind: SimKind; params: P; seed: num
         if (front >= 1 || !m.alive) {
           ctx.globalCompositeOperation = "source-over";
           ctx.fillStyle = "rgba(255,255,255,0.5)";
-          ctx.font = "11px var(--font-jb)";
-          ctx.fillText(front >= 1 ? "SAMPLE CONSUMED · re-igniting…" : "NO SUSTAINED FLAME AT THESE CONDITIONS", 16, 24);
+          ctx.font = "500 12px var(--font-public), sans-serif";
+          ctx.fillText(front >= 1 ? "Sample consumed, re-igniting…" : "No sustained flame at these conditions", 16, 68);
         }
       } else if (kind === "droplet") {
         const cx = W / 2,
@@ -212,8 +198,8 @@ function SimCanvas({ kind, params, seed }: { kind: SimKind; params: P; seed: num
         }
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = "rgba(255,255,255,0.55)";
-        ctx.font = "11px var(--font-jb)";
-        ctx.fillText(`d² = ${(d2 * 100).toFixed(0)}% of d₀²   ${cool ? "· COOL-FLAME REGIME (near-invisible)" : ""}`, 16, 24);
+        ctx.font = "500 12px var(--font-public), sans-serif";
+        ctx.fillText(`d² = ${(d2 * 100).toFixed(0)}% of d₀²   ${cool ? "· cool-flame regime (nearly invisible)" : ""}`, 16, 68);
       } else if (kind === "sphere") {
         const cx = W / 2,
           cy = H / 2;
@@ -257,8 +243,8 @@ function SimCanvas({ kind, params, seed }: { kind: SimKind; params: P; seed: num
           ctx.strokeRect(nx - 70, ny - L - 40, 140, 6);
           ctx.setLineDash([]);
           ctx.fillStyle = "rgba(164,139,255,0.8)";
-          ctx.font = "10px var(--font-jb)";
-          ctx.fillText(`E-FIELD ELECTRODE · ${(p.efield * 10).toFixed(1)} kV`, nx - 70, ny - L - 48);
+          ctx.font = "500 12px var(--font-public), sans-serif";
+          ctx.fillText(`Electrode · ${(p.efield * 10).toFixed(1)} kV`, nx - 70, ny - L - 48);
         }
       } else {
         // smoke
@@ -272,8 +258,8 @@ function SimCanvas({ kind, params, seed }: { kind: SimKind; params: P; seed: num
         ctx.strokeStyle = "rgba(164,139,255,0.7)";
         ctx.strokeRect(W * 0.78, H * 0.3, 60, 60);
         ctx.fillStyle = "rgba(164,139,255,0.8)";
-        ctx.font = "10px var(--font-jb)";
-        ctx.fillText("DETECTOR", W * 0.78, H * 0.3 - 6);
+        ctx.font = "500 12px var(--font-public), sans-serif";
+        ctx.fillText("Smoke detector", W * 0.78, H * 0.3 - 6);
       }
 
       // particles (soot/smoke)
@@ -307,180 +293,199 @@ function SimCanvas({ kind, params, seed }: { kind: SimKind; params: P; seed: num
   return <canvas ref={cv} className="h-full w-full" aria-label={KIND_LABEL[kind]} />;
 }
 
-function RangeSlider({ label, unit, value, min, max, step, tested, onChange }: { label: string; unit: string; value: number; min: number; max: number; step: number; tested?: [number, number]; onChange: (v: number) => void }) {
-  const pct = (v: number) => ((v - min) / (max - min)) * 100;
-  const out = tested && (value < tested[0] - 0.01 || value > tested[1] + 0.01);
-  return (
-    <label className="block">
-      <div className="mb-1.5 flex items-baseline justify-between">
-        <span className="label">{label}</span>
-        <span className={`font-mono text-xs ${out ? "text-amber" : "text-white"}`}>
-          {value}
-          {unit}
-        </span>
-      </div>
-      <div className="relative">
-        {tested && (
-          <div
-            className="pointer-events-none absolute top-1/2 h-3 -translate-y-1/2 rounded-sm border border-green/50 bg-green/15"
-            style={{ left: `${pct(tested[0])}%`, width: `max(6px, ${pct(tested[1]) - pct(tested[0])}%)` }}
-            title="Tested range"
-          />
-        )}
-        <input type="range" className="slider relative w-full" min={min} max={max} step={step} value={value} style={{ ["--p" as string]: `${pct(value)}%` }} onChange={(e) => onChange(Number(e.target.value))} aria-label={label} />
-      </div>
-    </label>
-  );
-}
+
+const KINDS: { id: SimKind; label: string; hint: string; icon: LucideIcon }[] = [
+  { id: "spread", label: "Solid materials", hint: "Flame spread", icon: Flame },
+  { id: "droplet", label: "Fuel droplets", hint: "d²-law burning", icon: Droplet },
+  { id: "sphere", label: "Spherical flames", hint: "Porous burner", icon: CircleDot },
+  { id: "jet", label: "Gas jets", hint: "Co-flow flames", icon: Wind },
+  { id: "smoke", label: "Smoke", hint: "Detection", icon: Cloud },
+];
+
+export const testedSetup = (i: Investigation): P => ({ o2: i.o2[1], pressure: i.pressure[0], flow: Math.round((i.flow[0] + i.flow[1]) / 2), gravity: 0, efield: 0 });
 
 export default function Simulator({ investigations, cond, label, onOpen }: { investigations: Investigation[]; cond: Conditions; label: string; onOpen: (id: string) => void }) {
-  const [sel, setSel] = useState(investigations[0]?.id ?? "bass-ii");
-  const [cat, setCat] = useState<SafetyCategory | "all">("all");
-  const [q, setQ] = useState("");
+  const [kind, setKind] = useState<SimKind>("spread");
+  const group = useMemo(() => investigations.filter((i) => simKind(i) === kind), [investigations, kind]);
+  const [sel, setSel] = useState("bass-ii");
+  const inv = group.find((i) => i.id === sel) ?? group[0];
   const [seed, setSeed] = useState(0);
-  const inv = investigations.find((i) => i.id === sel)!;
-  const kind = simKind(inv);
-  const [p, setP] = useState<P>({ ...cond, efield: 0 });
+  const [p, setP] = useState<P>(() => {
+    const b = investigations.find((i) => i.id === "bass-ii");
+    return b ? testedSetup(b) : { ...cond, efield: 0 };
+  });
   const ai = useAI();
+  const { setText } = ai;
 
-  const ranked = useMemo(() => rank(investigations, cond), [investigations, cond]);
-  const list = ranked.filter((r) => (cat === "all" || r.inv.categories.includes(cat)) && (!q || `${r.inv.acronym} ${r.inv.name} ${r.inv.fuels.join(" ")}`.toLowerCase().includes(q.toLowerCase())));
-
-  const loadTested = (i: Investigation) => setP({ o2: i.o2[1], pressure: i.pressure[0], flow: Math.round((i.flow[0] + i.flow[1]) / 2), gravity: 0, efield: 0 });
   const select = (i: Investigation) => {
     setSel(i.id);
-    loadTested(i);
-    setSeed((s) => s + 1);
-    ai.setText("");
+    setP(testedSetup(i));
+    setSeed((x) => x + 1);
+    setText("");
   };
-  useEffect(() => {
-    setP({ ...cond, efield: 0 });
-  }, [cond]);
+  const chooseKind = (k: SimKind) => {
+    setKind(k);
+    const first = investigations.find((i) => simKind(i) === k);
+    if (first) select(first);
+  };
 
+  if (!inv) return null;
   const m = model(kind, p);
-  const outside = p.o2 < inv.o2[0] - 0.01 || p.o2 > inv.o2[1] + 0.01 || p.pressure < inv.pressure[0] - 1 || p.pressure > inv.pressure[1] + 1 || p.gravity > 0.001;
+  const outside =
+    p.o2 < inv.o2[0] - 0.01 || p.o2 > inv.o2[1] + 0.01 || p.pressure < inv.pressure[0] - 1 || p.pressure > inv.pressure[1] + 1 || p.flow < inv.flow[0] - 0.01 || p.flow > inv.flow[1] + 0.01 || p.gravity > 0.001;
 
   return (
     <Section
       id="simulator"
-      eyebrow="Experiment Simulator"
+      eyebrow="Experiment simulator"
       title={
         <>
-          Re-fly the experiments. <span className="text-gradient">Live.</span>
+          Re-fly NASA&apos;s experiments, <span className="text-blue">then push past them.</span>
         </>
       }
-      intro="Every PSI investigation runs as a live simulation. Push oxygen, pressure, airflow and gravity past what was tested and FlameScope flags exactly when you leave the data and start extrapolating."
+      intro="Pick an experiment and it runs live at the conditions NASA tested. The green band on each slider is what was actually flown. Move outside it and you have left the data."
     >
-      <div className="grid gap-4 lg:grid-cols-[280px_1fr_320px]">
-        {/* list */}
-        <div className="glass hud flex max-h-[640px] flex-col">
-          <div className="space-y-2 border-b border-line p-3">
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search experiments…" className="w-full rounded border border-line bg-black/50 px-3 py-2 text-xs text-white placeholder:text-ink-3 focus:border-blue focus:outline-none" />
-            <div className="flex flex-wrap gap-1">
-              {(["all", "prevention", "detection", "suppression"] as const).map((c) => (
-                <button key={c} onClick={() => setCat(c)} className={`rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-wider transition ${cat === c ? "border-white bg-white text-black" : "border-line text-ink-2 hover:text-white"}`}>
-                  {c === "all" ? "All" : CAT_META[c].label}
+      <div className="panel overflow-hidden p-2 sm:p-3">
+        {/* window chrome */}
+        <div className="flex items-center gap-3 px-3 pb-3 pt-1.5">
+          <span className="flex gap-1.5">
+            <span className="h-3 w-3 rounded-full bg-[#ff5f57]" />
+            <span className="h-3 w-3 rounded-full bg-[#febc2e]" />
+            <span className="h-3 w-3 rounded-full bg-[#28c840]" />
+          </span>
+          <span className="mx-auto hidden rounded-full bg-paper px-4 py-1 text-[0.78rem] text-ink-3 sm:block">flamescope / simulator / {inv.acronym.toLowerCase()}</span>
+          <span className="w-[54px]" />
+        </div>
+        <div className="rounded-[24px] bg-paper p-2 sm:p-3">
+          <Seg id="simkind" items={KINDS} value={kind} onChange={chooseKind} />
+        </div>
+
+        <div className="mt-2 grid gap-2 lg:grid-cols-[1fr_360px]">
+          {/* Stage */}
+          <div className="relative min-h-[440px] overflow-hidden rounded-[24px] bg-night sm:min-h-[540px]">
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_55%,rgba(31,92,255,0.16),transparent_65%)]" />
+            <div className="absolute inset-0">
+              <SimCanvas kind={kind} params={p} seed={seed} />
+            </div>
+            <div className="no-scrollbar absolute inset-x-0 top-0 flex gap-1.5 overflow-x-auto p-3 pr-28">
+              {group.map((g) => (
+                <button
+                  key={g.id}
+                  onClick={() => select(g)}
+                  className={`shrink-0 rounded-full px-3.5 py-1.5 text-[0.82rem] font-semibold transition ${g.id === inv.id ? "bg-white text-ink" : "bg-white/8 text-snow-2 ring-1 ring-white/10 hover:bg-white/15"}`}
+                >
+                  {g.acronym}
                 </button>
               ))}
             </div>
-          </div>
-          <div className="scrollbar-thin flex-1 overflow-y-auto">
-            {list.map((r) => (
-              <button key={r.inv.id} onClick={() => select(r.inv)} className={`flex w-full items-center gap-3 border-b border-line/60 px-3 py-2.5 text-left transition ${sel === r.inv.id ? "bg-blue/10" : "hover:bg-white/[0.03]"}`}>
-                <span className="h-8 w-[3px] rounded-full" style={{ background: FUEL_META[r.inv.fuelType].color, opacity: sel === r.inv.id ? 1 : 0.5 }} />
-                <span className="min-w-0 flex-1">
-                  <span className={`block text-sm font-semibold ${sel === r.inv.id ? "text-blue" : "text-white"}`}>{r.inv.acronym}</span>
-                  <span className="block truncate text-[11px] text-ink-3">{r.inv.name}</span>
-                </span>
-                <span className="font-mono text-[11px] text-ink-2">{r.score}</span>
-              </button>
-            ))}
-          </div>
-          <div className="border-t border-line px-3 py-2 font-mono text-[10px] text-ink-3">Ranked for {label}</div>
-        </div>
-
-        {/* stage */}
-        <div className="glass hud relative flex min-h-[420px] flex-col overflow-hidden">
-          <div className="flex items-center justify-between border-b border-line px-4 py-3">
-            <div className="min-w-0">
-              <div className="label">{KIND_LABEL[kind]}</div>
-              <div className="truncate font-display text-xl font-semibold uppercase tracking-wide text-white">
-                {inv.acronym} <span className="text-sm font-normal normal-case text-ink-3">· {inv.platform}</span>
+            <div className="absolute right-3 top-3">
+              <motion.span
+                key={String(m.alive)}
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[0.78rem] font-semibold ${m.alive ? "bg-go/15 text-[#5fe3b4]" : "bg-flame/15 text-flame"}`}
+              >
+                <span className={`h-1.5 w-1.5 rounded-full ${m.alive ? "animate-pulse bg-[#5fe3b4]" : "bg-flame"}`} />
+                {m.alive ? "Burning" : "Out"}
+              </motion.span>
+            </div>
+            <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2">
+              <AnimatePresence>
+                {outside && (
+                  <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }} className="frost inline-flex items-center gap-2 self-start rounded-full px-3.5 py-2 text-[0.82rem] text-[#ffd2bf]">
+                    <AlertTriangle size={15} className="text-flame" />
+                    Extrapolating beyond what {inv.acronym} tested
+                  </motion.div>
+                )}
+              </AnimatePresence>
+              <div className="grid grid-cols-3 gap-2">
+                {m.readouts.map(([k, v]) => (
+                  <div key={k} className="frost rounded-2xl px-3 py-2.5 text-snow">
+                    <div className="truncate text-[0.72rem] text-snow-3">{k}</div>
+                    <div className={`tnum truncate text-[0.95rem] font-semibold ${/Extinguished|Cool/.test(v) ? "text-flame" : ""}`}>{v}</div>
+                  </div>
+                ))}
               </div>
             </div>
-            <span className={`shrink-0 rounded-sm border px-2 py-1 font-mono text-[10px] uppercase tracking-wider ${m.alive ? "border-green/40 text-green" : "border-ember/50 text-ember"}`}>{m.alive ? "● Live" : "○ Out"}</span>
           </div>
-          <div className="relative flex-1">
-            <SimCanvas kind={kind} params={p} seed={seed} />
-            <AnimatePresence>
-              {outside && (
-                <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="absolute right-3 top-3 max-w-[60%] rounded-sm border border-amber/50 bg-black/70 px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wider text-amber backdrop-blur">
-                  ⚠ Extrapolating beyond {inv.acronym}&apos;s tested envelope
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-          <div className="grid grid-cols-3 gap-px border-t border-line bg-line">
-            {m.readouts.map(([k, v]) => (
-              <div key={k} className="bg-black/80 px-3 py-2.5">
-                <div className="text-[9px] uppercase tracking-widest text-white/40">{k}</div>
-                <div className={`font-mono text-sm ${/EXTING|OUT|COOL/.test(v) ? "text-amber" : "text-white"}`}>{v}</div>
-              </div>
-            ))}
-          </div>
-        </div>
 
-        {/* controls */}
-        <div className="glass hud flex flex-col gap-4 p-4">
-          <div className="flex items-center justify-between">
-            <span className="label">Test conditions</span>
-            <span className="flex items-center gap-1.5 font-mono text-[9px] uppercase text-green">
-              <span className="h-2 w-3 rounded-sm border border-green/50 bg-green/15" /> tested
-            </span>
-          </div>
-          <RangeSlider label="Oxygen" unit="%" value={p.o2} min={10} max={100} step={0.5} tested={inv.o2} onChange={(v) => setP({ ...p, o2: v })} />
-          <RangeSlider label="Pressure" unit=" kPa" value={p.pressure} min={20} max={300} step={1} tested={inv.pressure} onChange={(v) => setP({ ...p, pressure: v })} />
-          <RangeSlider label="Airflow" unit=" cm/s" value={p.flow} min={0} max={50} step={1} tested={inv.flow} onChange={(v) => setP({ ...p, flow: v })} />
-          <RangeSlider label="Gravity" unit=" g" value={p.gravity} min={0} max={1} step={0.01} tested={[0, 0]} onChange={(v) => setP({ ...p, gravity: v })} />
-          {inv.id === "e-field" && <RangeSlider label="Electric field" unit="" value={p.efield} min={0} max={1} step={0.05} tested={[0, 1]} onChange={(v) => setP({ ...p, efield: v })} />}
-          <div className="grid grid-cols-2 gap-2">
-            <button onClick={() => { loadTested(inv); setSeed((s) => s + 1); }} className="rounded-sm border border-line px-2 py-2 font-mono text-[10px] uppercase tracking-wider text-ink-2 hover:border-white hover:text-white">
-              Tested setup
-            </button>
-            <button onClick={() => { setP({ ...cond, efield: 0 }); setSeed((s) => s + 1); }} className="rounded-sm border border-blue/50 px-2 py-2 font-mono text-[10px] uppercase tracking-wider text-blue hover:bg-blue/10">
-              Mission atmos.
-            </button>
-          </div>
-          <button onClick={() => setSeed((s) => s + 1)} className="rounded-sm bg-white py-2 text-xs font-semibold uppercase tracking-wider text-black transition hover:bg-blue">
-            ↻ Re-ignite
-          </button>
-          <div className="border-t border-line pt-3">
-            <div className="flex flex-wrap gap-1">
+          {/* Controls */}
+          <div className="flex flex-col rounded-[24px] bg-paper p-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-[0.8rem] text-ink-3">{KIND_LABEL[kind]}</div>
+                <h3 className="text-[1.6rem] font-semibold leading-tight">{inv.acronym}</h3>
+                <p className="text-[0.85rem] text-ink-2">{inv.name}</p>
+              </div>
+              <button
+                onClick={() => onOpen(inv.id)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white text-ink ring-1 ring-line transition hover:bg-ink hover:text-white"
+                aria-label={`Open ${inv.acronym} details`}
+              >
+                <ArrowUpRight size={16} />
+              </button>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
               {inv.categories.map((c) => (
                 <CatChip key={c} c={c} />
               ))}
             </div>
-            <p className="mt-2 text-xs leading-relaxed text-ink-2">{inv.findings[0]}</p>
-            <div className="mt-3 flex gap-2">
-              <button onClick={() => onOpen(inv.id)} className="flex-1 rounded-sm border border-line py-1.5 text-[11px] text-white hover:border-white">
-                Full dossier
-              </button>
-              <button onClick={() => ai.run({ mode: "interpret", ids: [inv.id], conditions: { ...p, label } })} className="flex-1 rounded-sm bg-blue/15 py-1.5 text-[11px] text-blue hover:bg-blue/25">
-                {ai.loading ? "Thinking…" : "✦ AI interpret"}
-              </button>
+
+            <div className="mt-6 space-y-6">
+              <Slider label="Oxygen" unit="%" value={p.o2} min={10} max={100} step={0.5} band={inv.o2} onChange={(v) => setP({ ...p, o2: v })} />
+              <Slider label="Pressure" unit=" kPa" value={p.pressure} min={20} max={300} step={1} band={inv.pressure} onChange={(v) => setP({ ...p, pressure: v })} />
+              <Slider label="Airflow" unit=" cm/s" value={p.flow} min={0} max={50} step={1} band={inv.flow} onChange={(v) => setP({ ...p, flow: v })} />
+              <Slider label="Gravity" unit=" g" value={p.gravity} min={0} max={1} step={0.01} band={[0, 0]} onChange={(v) => setP({ ...p, gravity: v })} />
+              {inv.id === "e-field" && <Slider label="Electric field" unit="" value={p.efield} min={0} max={1} step={0.05} band={[0, 1]} onChange={(v) => setP({ ...p, efield: v })} />}
+            </div>
+
+            <div className="mt-6 grid grid-cols-2 gap-2">
+              <Btn
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setP(testedSetup(inv));
+                  setSeed((x) => x + 1);
+                }}
+              >
+                <FlaskConical size={14} /> Tested setup
+              </Btn>
+              <Btn
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setP({ ...cond, efield: 0 });
+                  setSeed((x) => x + 1);
+                }}
+              >
+                My mission
+              </Btn>
+              <Btn variant="ink" size="sm" className="col-span-2" onClick={() => setSeed((x) => x + 1)}>
+                <RotateCcw size={14} /> Re-ignite
+              </Btn>
+            </div>
+            <div className="mt-auto pt-5">
+              <Btn variant="blue" className="w-full" disabled={ai.loading} onClick={() => ai.run({ mode: "interpret", ids: [inv.id], conditions: { ...p, label } })}>
+                <Sparkles size={15} /> {ai.loading ? "Interpreting…" : "What does this mean for a crew?"}
+              </Btn>
             </div>
           </div>
         </div>
+
+        <AnimatePresence>
+          {ai.text && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+              <div className="mt-2 rounded-[24px] bg-paper p-6">
+                <div className="mb-2 flex items-center gap-2 text-[0.85rem] font-semibold text-blue">
+                  <Sparkles size={15} /> {inv.acronym} at {p.o2}% O₂, {p.pressure} kPa, {p.gravity} g
+                </div>
+                <AIText text={ai.text} loading={ai.loading} investigations={investigations} onCite={onOpen} />
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
-      <AnimatePresence>
-        {ai.text && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="glass hud mt-4 p-5">
-            <div className="label mb-2">✦ AI interpretation: {inv.acronym} at {p.o2}% O₂ · {p.pressure} kPa · {p.gravity} g</div>
-            <AIText text={ai.text} loading={ai.loading} investigations={investigations} onCite={onOpen} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-      <p className="mt-3 font-mono text-[10px] uppercase tracking-wider text-ink-3">Simulations visualise qualitative trends reported by each investigation (heuristic, not validated CFD).</p>
+      <p className="mt-4 text-[0.8rem] text-ink-3">The simulations show the qualitative trends each investigation reported. They are heuristic models, not validated CFD.</p>
     </Section>
   );
 }

@@ -1,36 +1,30 @@
 "use client";
 
-import { AnimatePresence, motion, useScroll, useSpring } from "framer-motion";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll, useSpring } from "framer-motion";
+import { Menu, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useCallback, useState } from "react";
 import type { Investigation, SafetyCategory } from "@/data/investigations";
 import { missions, type Mission } from "@/lib/missions";
 import type { Conditions } from "@/lib/scoring";
 import Ascent from "./Ascent";
-import Ask from "./Ask";
-import { Cursor, Preloader, SmoothScroll } from "./Chrome";
-import { GravityGap, Methodology, Spinoffs } from "./Closing";
-import Compare from "./Compare";
-import Drawer from "./Drawer";
-import Envelope from "./Envelope";
+import { Preloader, SmoothScroll } from "./Chrome";
+import { Methodology, Spinoffs } from "./Closing";
+import Dossier from "./Dossier";
 import Hero from "./Hero";
 import Incidents from "./Incidents";
-import MissionConsole from "./MissionConsole";
+import MissionControl from "./MissionControl";
 import Simulator from "./Simulator";
+import { MISSION_ICON } from "./ui";
+
+const GravityGap = dynamic(() => import("./GravityGap"), { ssr: false, loading: () => <div className="h-[100svh]" /> });
 
 const NAV = [
-  ["ascent", "O₂ Ascent"],
-  ["simulator", "Simulator"],
+  ["ascent", "Oxygen"],
+  ["simulator", "Experiments"],
   ["control", "Mission Control"],
-  ["gravity", "Gravity Gap"],
+  ["gravity", "Gravity"],
   ["method", "Method"],
-];
-
-type Tab = "console" | "envelope" | "compare" | "ask";
-const TABS: { id: Tab; l: string; d: string }[] = [
-  { id: "console", l: "Ranking", d: "Relevance engine" },
-  { id: "envelope", l: "Envelope", d: "O₂ × pressure map" },
-  { id: "compare", l: "Compare", d: "Side by side" },
-  { id: "ask", l: "Ask AI", d: "Grounded analyst" },
 ];
 
 export default function Dashboard({ investigations, source }: { investigations: Investigation[]; source: "supabase" | "local" }) {
@@ -41,9 +35,10 @@ export default function Dashboard({ investigations, source }: { investigations: 
   const [compareIds, setCompareIds] = useState<string[]>(["saffire-1", "bass-ii"]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [menu, setMenu] = useState(false);
-  const [tab, setTab] = useState<Tab>("console");
-  const { scrollYProgress } = useScroll();
+  const [onHero, setOnHero] = useState(true);
+  const { scrollY, scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 120, damping: 30 });
+  useMotionValueEvent(scrollY, "change", (v) => setOnHero(v < window.innerHeight * 0.85));
 
   const label = missionId === "custom" ? `Custom (${cond.o2}% O₂, ${Math.round(cond.pressure)} kPa)` : missions.find((m) => m.id === missionId)!.name;
 
@@ -61,57 +56,52 @@ export default function Dashboard({ investigations, source }: { investigations: 
   );
   const onOpen = useCallback((id: string) => setOpenId(id), []);
   const onClose = useCallback(() => setOpenId(null), []);
-  const goTab = (t: Tab) => {
-    setTab(t);
-    const el = document.getElementById("control");
-    const lenis = (window as unknown as { __lenis?: { scrollTo: (e: HTMLElement, o: object) => void } }).__lenis;
-    if (el) {
-      if (lenis) lenis.scrollTo(el, { offset: -70 });
-      else el.scrollIntoView({ behavior: "smooth" });
-    }
-  };
   const cur = missions.find((m) => m.id === missionId);
+  const CurIcon = MISSION_ICON[missionId] ?? MISSION_ICON.custom;
 
   return (
-    <div className="relative min-h-screen overflow-x-clip bg-black">
+    <div className="relative min-h-screen overflow-x-clip bg-paper">
       <Preloader />
-      <Cursor />
       <SmoothScroll />
-      <motion.div style={{ scaleX: progress }} className="fixed inset-x-0 top-0 z-[60] h-px origin-left bg-blue" />
+      <motion.div style={{ scaleX: progress }} className="fixed inset-x-0 top-0 z-[60] h-[2px] origin-left bg-flame" />
 
-      <nav className="fixed inset-x-0 top-0 z-30">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-4 px-4 py-4 sm:px-8 lg:px-12">
-          <a href="#top" className="flex items-center gap-2.5">
-            <span className="relative flex h-7 w-7 items-center justify-center rounded-full border border-white/30">
-              <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-white via-blue to-blue-deep shadow-[0_0_12px_#4fc3ff]" />
-            </span>
-            <span className="font-display text-sm font-bold uppercase tracking-[0.2em]">FlameScope</span>
+      {/* Floating pill nav */}
+      <nav className="fixed inset-x-0 top-3 z-30 px-3 sm:top-4">
+        <div
+          className={`mx-auto flex max-w-[1100px] items-center justify-between gap-3 rounded-full py-1.5 pl-4 pr-1.5 transition-colors duration-500 ${
+            onHero ? "frost text-snow" : "bg-white/90 text-ink shadow-[0_10px_40px_-16px_rgba(16,24,40,0.3)] ring-1 ring-line backdrop-blur-xl"
+          }`}
+        >
+          <a href="#top" className="flex items-center gap-2.5" aria-label="FlameScope home">
+            <Logo />
+            <span className="display text-[1.05rem] font-semibold tracking-tight">FlameScope</span>
           </a>
-          <div className="glass hidden items-center gap-1 rounded-full px-1.5 py-1 lg:flex">
+          <div className="hidden items-center gap-0.5 lg:flex">
             {NAV.map(([id, l]) => (
-              <a key={id} href={`#${id}`} className="whitespace-nowrap rounded-full px-3.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-2 transition hover:bg-white/10 hover:text-white">
+              <a key={id} href={`#${id}`} className={`whitespace-nowrap rounded-full px-3.5 py-2 text-[0.88rem] font-medium transition ${onHero ? "text-snow-2 hover:bg-white/10 hover:text-snow" : "text-ink-2 hover:bg-paper hover:text-ink"}`}>
                 {l}
               </a>
             ))}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="hidden items-center gap-1.5 whitespace-nowrap font-mono text-[10px] uppercase tracking-[0.18em] text-ink-3 sm:inline-flex">
-              <span className={`h-1.5 w-1.5 rounded-full ${source === "supabase" ? "bg-green shadow-[0_0_8px_#4ef0a8]" : "bg-amber"}`} />
-              {source === "supabase" ? "Live PSI data" : "Local data"}
+          <div className="flex items-center gap-1.5">
+            <span className={`hidden items-center gap-1.5 whitespace-nowrap px-2 text-[0.78rem] sm:inline-flex ${onHero ? "text-snow-3" : "text-ink-3"}`} title={source === "supabase" ? "Served from Supabase" : "Bundled dataset"}>
+              <span className={`h-1.5 w-1.5 rounded-full ${source === "supabase" ? "bg-go" : "bg-warn"}`} />
+              {source === "supabase" ? "Live data" : "Local data"}
             </span>
-            <a href="#top" className="whitespace-nowrap rounded-full bg-white px-4 py-1.5 font-mono text-[10px] font-semibold uppercase tracking-[0.15em] text-black transition hover:bg-blue">
-              {cur?.emoji ?? "⚙︎"} {cur?.short ?? "Custom"}
+            <a href="#control" className={`inline-flex items-center gap-2 whitespace-nowrap rounded-full py-2 pl-3 pr-4 text-[0.85rem] font-semibold transition ${onHero ? "bg-white text-ink hover:bg-blue hover:text-white" : "bg-ink text-white hover:bg-blue"}`}>
+              <CurIcon size={15} />
+              {cur?.short ?? "Custom"}
             </a>
-            <button onClick={() => setMenu(!menu)} className="rounded-full border border-white/20 px-3 py-1.5 text-xs lg:hidden" aria-label="Menu" aria-expanded={menu}>
-              {menu ? "✕" : "☰"}
+            <button onClick={() => setMenu(!menu)} className={`flex h-9 w-9 items-center justify-center rounded-full lg:hidden ${onHero ? "hover:bg-white/10" : "hover:bg-paper"}`} aria-label="Menu" aria-expanded={menu}>
+              {menu ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
         </div>
         <AnimatePresence>
           {menu && (
-            <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="glass hud mx-4 grid grid-cols-2 gap-1 p-2 lg:hidden">
+            <motion.div initial={{ opacity: 0, y: -8, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8 }} className="mx-auto mt-2 grid max-w-[1100px] gap-1 rounded-3xl bg-white p-2 shadow-xl ring-1 ring-line lg:hidden">
               {NAV.map(([id, l]) => (
-                <a key={id} href={`#${id}`} onClick={() => setMenu(false)} className="px-4 py-3 font-mono text-xs uppercase tracking-wider text-ink-2 hover:bg-white/5">
+                <a key={id} href={`#${id}`} onClick={() => setMenu(false)} className="rounded-2xl px-4 py-3 text-[0.95rem] font-medium text-ink hover:bg-paper">
                   {l}
                 </a>
               ))}
@@ -121,80 +111,54 @@ export default function Dashboard({ investigations, source }: { investigations: 
       </nav>
 
       <Hero investigations={investigations} missionId={missionId} setMission={setMission} cond={cond} />
-      <div className="pt-16">
-        <Incidents />
-      </div>
+      <Incidents />
       <Ascent investigations={investigations} onOpen={onOpen} />
       <Simulator investigations={investigations} cond={cond} label={label} onOpen={onOpen} />
-
-      <section id="control" className="relative mx-auto max-w-7xl scroll-mt-20 px-4 pt-16 sm:px-6">
-        <div className="mb-4 flex items-center gap-3 font-mono text-[0.68rem] uppercase tracking-[0.25em] text-blue">
-          <span className="h-px w-8 bg-blue" />
-          Mission Control
-        </div>
-        <div className="glass hud sticky top-16 z-20 grid grid-cols-2 gap-1 p-1 sm:grid-cols-4">
-          {TABS.map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)} className={`relative overflow-hidden rounded-sm px-4 py-3 text-left transition ${tab === t.id ? "text-black" : "text-white hover:bg-white/5"}`}>
-              {tab === t.id && <motion.span layoutId="tab-bg" className="absolute inset-0 bg-white" transition={{ type: "spring", stiffness: 400, damping: 35 }} />}
-              <span className="relative block text-sm font-semibold uppercase tracking-wide">{t.l}</span>
-              <span className={`relative block font-mono text-[10px] uppercase tracking-wider ${tab === t.id ? "text-black/55" : "text-ink-3"}`}>{t.d}</span>
-            </button>
-          ))}
-        </div>
-      </section>
-      <AnimatePresence mode="wait">
-        <motion.div key={tab} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.3 }} className="-mt-8">
-          {tab === "console" && (
-            <MissionConsole
-              investigations={investigations}
-              missionId={missionId}
-              setMission={setMission}
-              cond={cond}
-              setCond={setCond}
-              focus={focus}
-              setFocus={setFocus}
-              onOpen={onOpen}
-              compareIds={compareIds}
-              toggleCompare={toggleCompare}
-              label={label}
-            />
-          )}
-          {tab === "envelope" && <Envelope investigations={investigations} cond={cond} onOpen={onOpen} setCond={setCond} />}
-          {tab === "compare" && <Compare investigations={investigations} ids={compareIds} toggle={toggleCompare} cond={cond} label={label} onOpen={onOpen} />}
-          {tab === "ask" && <Ask investigations={investigations} cond={cond} label={label} onOpen={onOpen} />}
-        </motion.div>
-      </AnimatePresence>
-
-      <GravityGap onOpen={onOpen} />
+      <MissionControl
+        investigations={investigations}
+        missionId={missionId}
+        setMission={setMission}
+        cond={cond}
+        setCond={setCond}
+        focus={focus}
+        setFocus={setFocus}
+        onOpen={onOpen}
+        compareIds={compareIds}
+        toggleCompare={toggleCompare}
+        label={label}
+      />
+      <GravityGap investigations={investigations} onOpen={onOpen} />
       <Spinoffs onOpen={onOpen} />
       <Methodology source={source} />
 
-      <footer className="border-t border-line">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-10 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+      <footer className="mx-auto max-w-[1240px] px-4 pb-10 sm:px-6">
+        <div className="panel-dark flex flex-col gap-6 p-8 sm:flex-row sm:items-end sm:justify-between sm:p-12">
           <div>
-            <span className="text-white">FlameScope</span> · NASA Space Apps Challenge 2026 · Flame in Freefall
+            <div className="flex items-center gap-2.5">
+              <Logo />
+              <span className="display text-2xl font-semibold">FlameScope</span>
+            </div>
+            <p className="mt-3 max-w-md text-[0.95rem] text-snow-2">Making the next giant leap a safer one. Built for NASA Space Apps Challenge 2026, Flame in Freefall.</p>
           </div>
-          <div>Data: NASA PSI · Not an official NASA product</div>
+          <div className="text-[0.85rem] text-snow-3 sm:text-right">
+            Data from NASA Physical Sciences Informatics
+            <br />
+            Not an official NASA product
+          </div>
         </div>
       </footer>
 
-      <AnimatePresence>
-        {compareIds.length > 0 && !openId && tab !== "compare" && (
-          <motion.button
-            onClick={() => goTab("compare")}
-            initial={{ y: 80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            className="glass hud fixed bottom-4 left-1/2 z-30 flex max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 whitespace-nowrap py-2 pl-4 pr-2 text-xs shadow-2xl"
-          >
-            <span className="hidden font-mono text-[10px] uppercase tracking-wider text-ink-3 sm:inline">Compare</span>
-            <span className="truncate font-medium text-white">{compareIds.map((id) => investigations.find((i) => i.id === id)?.acronym).join(" · ")}</span>
-            <span className="rounded-sm bg-white px-3 py-1 font-semibold text-black">View →</span>
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      <Drawer inv={investigations.find((i) => i.id === openId)} onClose={onClose} cond={cond} label={label} investigations={investigations} onOpen={onOpen} />
+      <Dossier inv={investigations.find((i) => i.id === openId)} onClose={onClose} cond={cond} label={label} investigations={investigations} onOpen={onOpen} compareIds={compareIds} toggleCompare={toggleCompare} />
     </div>
+  );
+}
+
+function Logo() {
+  return (
+    <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden>
+      <circle cx="13" cy="13" r="12" fill="none" stroke="currentColor" strokeOpacity="0.35" />
+      <circle cx="13" cy="13" r="5.5" fill="#1f5cff" />
+      <path d="M13 3.5c2.4 2.6 3.2 4.6 2.4 6.4-.5 1.1-1.4 1.6-2.4 1.6s-1.9-.5-2.4-1.6c-.8-1.8 0-3.8 2.4-6.4z" fill="#ff6a2b" />
+    </svg>
   );
 }
