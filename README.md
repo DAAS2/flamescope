@@ -4,6 +4,14 @@
 
 FlameScope is an interactive, AI-powered web dashboard. It **summarizes, ranks and interprets** NASA Physical Sciences Informatics (PSI) combustion investigations to deliver fire safety insights for human exploration: spacecraft, the ISS, the Artemis Moon Base, pressurized rovers and Mars habitats.
 
+**Live demo:** _add your Vercel URL here_ · **Built for:** researchers and engineers designing fire safety for crewed habitats
+
+### In 30 seconds
+1. Pick a destination (ISS, Moon Base, rover, Mars, spacesuit) in the 3D hero. The whole app switches to that atmosphere.
+2. Scroll the Oxygen Ascent to see which experiments actually tested your oxygen level, and where nothing has.
+3. Re-run any of the 20 experiments live in the Simulator, inside the ranges NASA tested.
+4. Open Mission Control for a ranked evidence list, a draggable O₂ × pressure data map and a Gemini-written fire safety briefing that cites its sources.
+
 ## The problem
 Fires in space have killed crews (Apollo 1), threatened missions (Apollo 13, Mir), and as recently as Artemis II a smoke alarm sounded about 80,000 miles from home. In microgravity, flames lose buoyancy and become dim blue spheres, so Earth-based fire safety intuition no longer holds. NASA has decades of ISS combustion data in PSI, but it is hard to find, compare and interpret. Meanwhile the Moon Base is expected to run at **≥30% O₂ and ≤10.2 psi**, more than 40% more oxygen than Earth air, which makes materials far more flammable.
 
@@ -18,6 +26,7 @@ Fires in space have killed crews (Apollo 1), threatened missions (Apollo 13, Mir
 | "SI-powered" | **Google Gemini** (`gemini-3.6-flash`) powers a Mission Fire-Safety Briefing, per-investigation interpretation, AI comparison and an **Ask FlameScope** chat. Every answer is grounded in the dataset and cites investigations as clickable chips. |
 | Partial gravity (Moon/Mars) | **Gravity Gap** panel: µg ↔ Moon ↔ Mars ↔ Earth, flagging that PSI has no partial-g data, with E-FIELD Flames as the only proxy and LUCI/FM2 as future data. |
 | Applications on Earth | **Back on Earth**: water mist, smoke/dust detectors, firefighter air tanks and attire, each linked to the related PSI data. |
+| Brief considerations | Shared hardware (ACME/CIR, MDCA, MSG/SPICE duct) is flagged as "same" in Compare. DAFT/SAME instrument reuse, BRE, CFI-G up to 85% O₂, the spacesuit (100% O₂, 4.3 psi) and Moon Base (≥30% O₂, ≤10.2 psi) atmospheres are all built in as presets or dataset fields. |
 
 ### Experience highlights
 - **3D Mission Space (hero):** a real-time three.js scene with procedural Earth (clouds, atmosphere, city lights), Moon, Mars, Sun, a modelled **ISS**, a **lunar base with pressurized rover** and a **Mars habitat**. Click any destination and the camera flies there and sets the mission atmosphere for the whole app. A live flame model opens on demand.
@@ -40,7 +49,7 @@ ACME (BRE, CFI-G, E-FIELD Flames, CLD Flame, Flame Design, s-Flame) · MDCA drop
 - Condition ranges are envelopes summarised from public PSI/NASA descriptions and flagged *approximate* where not taken from exact test matrices.
 
 ## Tech stack
-- **Next.js 15 (App Router) + React 19 + TypeScript + Tailwind CSS v4**
+- **Next.js 15.5 (App Router, patched for CVE-2025-66478) + React 19 + TypeScript + Tailwind CSS v4**
 - **three.js + React Three Fiber + drei** (3D scene, procedural GLSL planets), **Framer Motion**, **Lenis**, **Recharts** (radar), custom SVG envelope chart and Canvas 2D experiment simulations
 - **Supabase** (Postgres): `investigations` table (read-only RLS) and `questions` log (insert-only RLS). The app falls back to the bundled dataset if Supabase is unreachable.
 - **Google Gemini API** (`gemini-3.6-flash`): streamed responses via a Next.js route handler. With no key set, it degrades gracefully to a deterministic, data-driven summary.
@@ -71,5 +80,6 @@ The database schema and seed are in `supabase/seed.sql` (generated from `src/dat
 - A curated subset of 20 investigations, with condition ranges summarised (flagged approximate). Next: ingest PSI test-matrix files directly.
 - No partial-gravity combustion data exists in PSI yet. Add LUCI and FM2 when they are published.
 - Validate the relevance weights with NASA fire safety researchers. Add per-test (not per-investigation) records.
+- Add CSV/JSON export of the ranked investigations and condition envelopes, so engineers can feed them straight into their own flammability models.
 
 *Not an official NASA product. Making the next giant leap a safer one.*
